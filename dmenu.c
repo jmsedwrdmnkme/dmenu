@@ -171,7 +171,7 @@ drawmenu(void)
 		/* draw vertical list */
 		for (item = curr; item != next; item = item->right)
 			drawitem(item, x, y += bh, mw - x);
-	} else if (matches && curr) {
+	} else if (matches) {
 		/* draw horizontal list */
 		x += inputw;
 		w = TEXTW("<");
@@ -414,7 +414,7 @@ keypress(XKeyEvent *ev)
 	switch(ksym) {
 	default:
 insert:
-		if (len > 0 && !iscntrl((unsigned char)*buf))
+		if (!iscntrl((unsigned char)*buf))
 			insert(buf, len);
 		break;
 	case XK_Delete:
@@ -639,8 +639,6 @@ setup(void)
 #ifdef XINERAMA
 	i = 0;
 	if (parentwin == root && (info = XineramaQueryScreens(dpy, &n))) {
-		if (n < 1)
-			die("Xinerama reported no screens");
 		XGetInputFocus(dpy, &w, &di);
 		if (mon >= 0 && mon < n)
 			i = mon;
@@ -663,9 +661,6 @@ setup(void)
 			for (i = 0; i < n; i++)
 				if (INTERSECT(x, y, 1, 1, info[i]) != 0)
 					break;
-		/* fallback to the first screen if there is no intersection */
-		if (i >= n)
-			i = 0;
 
 		x = info[i].x_org;
 		y = info[i].y_org + (topbar ? 0 : info[i].height - mh);
@@ -698,9 +693,8 @@ setup(void)
 	if ((xim = XOpenIM(dpy, NULL, NULL, NULL)) == NULL)
 		die("XOpenIM failed: could not open input device");
 
-	if ((xic = XCreateIC(xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
-	                XNClientWindow, win, XNFocusWindow, win, NULL)) == NULL)
-		die("XCreateIC failed: could not obtain input context");
+	xic = XCreateIC(xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+	                XNClientWindow, win, XNFocusWindow, win, NULL);
 
 	XMapRaised(dpy, win);
 	if (embed) {
